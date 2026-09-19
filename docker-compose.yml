@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: jobapply-postgres
+    environment:
+      POSTGRES_DB: jobapply
+      POSTGRES_USER: jobapply
+      POSTGRES_PASSWORD: jobapply
+    ports:
+      - "5433:5432"
+    volumes:
+      - jobapply_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  jobapply_postgres_data:
