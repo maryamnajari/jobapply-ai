@@ -13,6 +13,7 @@ import java.util.List;
 
 @Service
 public class JobAnalysisService {
+
     private final CandidateProfileRepository candidateProfileRepository;
     private final JobOfferRepository jobOfferRepository;
     private final JobAnalysisRepository jobAnalysisRepository;
@@ -36,7 +37,14 @@ public class JobAnalysisService {
 
         for (String requiredSkill : jobOffer.getRequiredSkills()) {
 
-            if (candidate.getSkills().contains(requiredSkill)) {
+            boolean hasSkill = candidate.getSkills()
+                    .stream()
+                    .anyMatch(candidateSkill ->
+                            normalizeSkill(candidateSkill)
+                                    .equals(normalizeSkill(requiredSkill))
+                    );
+
+            if (hasSkill) {
                 matchedSkills.add(requiredSkill);
             } else {
                 missingSkills.add(requiredSkill);
@@ -61,7 +69,9 @@ public class JobAnalysisService {
         return analysis;
     }
 
-    public JobAnalysis analyzeAndSave(Long candidateId, Long jobOfferId) {
+    public JobAnalysis analyzeAndSave(
+            Long candidateId,
+            Long jobOfferId) {
 
         CandidateProfile candidate = candidateProfileRepository
                 .findById(candidateId)
@@ -76,5 +86,19 @@ public class JobAnalysisService {
         JobAnalysis analysis = analyze(candidate, jobOffer);
 
         return jobAnalysisRepository.save(analysis);
+    }
+
+    private String normalizeSkill(String skill) {
+
+        String normalized = skill
+                .toLowerCase()
+                .replace(" ", "");
+
+        return switch (normalized) {
+            case "postgres", "postgresql" -> "postgresql";
+            case "js", "javascript" -> "javascript";
+            case "ts", "typescript" -> "typescript";
+            default -> normalized;
+        };
     }
 }
